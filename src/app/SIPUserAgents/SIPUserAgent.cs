@@ -1024,12 +1024,13 @@ namespace SIPSorcery.SIP.App
                         }
 
                         var answerSdp = MediaSession.CreateAnswer(null);
-
+                        var answerSdpString = answerSdp.ToString();
+                        answerSdpString = answerSdpString.Replace("a=inactive", "a=sendrecv");
                         m_sipDialogue.RemoteSDP = sipRequest.Body;
-                        m_sipDialogue.SDP = answerSdp.ToString();
+                        m_sipDialogue.SDP = answerSdpString;
                         m_sipDialogue.RemoteCSeq = sipRequest.Header.CSeq;
 
-                        var okResponse = reInviteTransaction.GetOkResponse(SDP.SDP_MIME_CONTENTTYPE, MediaSession.RemoteDescription.ToString());
+                        var okResponse = reInviteTransaction.GetOkResponse(SDP.SDP_MIME_CONTENTTYPE, MediaSession.RemoteDescription.ToString()); //tester avec m_sipDialogue.SDP ??
                         reInviteTransaction.SendFinalResponse(okResponse);
                     }
                     else
@@ -1835,9 +1836,9 @@ namespace SIPSorcery.SIP.App
         /// <param name="remoteSDP">The in-dialog SDP received from he remote party.</param>
         private void CheckRemotePartyHoldCondition(SDP remoteSDP = null)
         {
-            var mediaStreamStatus = remoteSDP?.GetMediaStreamStatus(SDPMediaTypesEnum.audio, 0) ?? MediaStreamStatusEnum.SendOnly;
+            var mediaStreamStatus = remoteSDP?.GetMediaStreamStatus(SDPMediaTypesEnum.audio, 0) ?? MediaStreamStatusEnum.SendOnly; 
 
-            if (mediaStreamStatus == MediaStreamStatusEnum.SendOnly)
+            if (mediaStreamStatus == MediaStreamStatusEnum.SendOnly && !IsOnRemoteHold)
             {
                 if (!IsOnRemoteHold)
                 {
@@ -1845,7 +1846,7 @@ namespace SIPSorcery.SIP.App
                     RemotePutOnHold?.Invoke();
                 }
             }
-            else if (mediaStreamStatus == MediaStreamStatusEnum.SendRecv && IsOnRemoteHold)
+            else if (mediaStreamStatus == MediaStreamStatusEnum.SendRecv || IsOnRemoteHold)
             {
                 if (IsOnRemoteHold)
                 {
