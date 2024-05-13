@@ -1009,7 +1009,7 @@ namespace SIPSorcery.SIP.App
                         var okResponse = reInviteTransaction.GetOkResponse(SDP.SDP_MIME_CONTENTTYPE, answerSdp.ToString());
                         reInviteTransaction.SendFinalResponse(okResponse);
                     }
-                    else if(offer == null)
+                    else if (offer == null)
                     {
                         CheckRemotePartyHoldCondition();
 
@@ -1285,10 +1285,13 @@ namespace SIPSorcery.SIP.App
             {
                 m_sipDialogue.SDP = sdp.ToString();
 
+                m_sipDialogue.SDP = m_sipDialogue.SDP;//.Replace("127.0.0.1", "1.2.3.99");
+
+
                 var reinviteRequest = m_sipDialogue.GetInDialogRequest(SIPMethodsEnum.INVITE);
                 reinviteRequest.Header.UserAgent = SIPConstants.SipUserAgentVersionString;
                 reinviteRequest.Header.ContentType = m_sdpContentType;
-                reinviteRequest.Body = sdp.ToString();
+                reinviteRequest.Body = sdp.ToString();//m_sipDialogue.SDP;
                 reinviteRequest.Header.Supported = SIPExtensionHeaders.REPLACES + ", " + SIPExtensionHeaders.NO_REFER_SUB + ", " + SIPExtensionHeaders.PRACK;
 
                 if (m_uac != null)
@@ -1306,7 +1309,17 @@ namespace SIPSorcery.SIP.App
                     reinviteRequest.Header.Contact = new List<SIPContactHeader>() { SIPContactHeader.GetDefaultSIPContactHeader(reinviteRequest.URI.Scheme) };
                 }
 
+                //reinviteRequest.Header.Contact.FirstOrDefault().ContactName = "99554210009";
+
                 UACInviteTransaction reinviteTransaction = new UACInviteTransaction(m_transport, reinviteRequest, m_outboundProxy);
+                /*var user = reinviteTransaction.TransactionRequestFrom.URI.User; // SGP Atos
+                var headers = reinviteTransaction.TransactionRequestFrom.URI.Headers;
+                reinviteTransaction.TransactionRequestFrom.URI = new SIPURI(user, "1.2.3.99", headers?.ToString());
+                reinviteTransaction.TransactionRequestFrom.Name = "Administrator";
+
+                reinviteTransaction.TransactionRequest.Header.To.ToName = "99554210001";
+                reinviteTransaction.TransactionRequest.Header.Allow = "INVITE";*/
+
                 reinviteTransaction.UACInviteTransactionFinalResponseReceived += ReinviteRequestFinalResponseReceived;
                 reinviteTransaction.SendInviteRequest();
             }
@@ -1836,7 +1849,7 @@ namespace SIPSorcery.SIP.App
         /// <param name="remoteSDP">The in-dialog SDP received from he remote party.</param>
         private void CheckRemotePartyHoldCondition(SDP remoteSDP = null)
         {
-            var mediaStreamStatus = remoteSDP?.GetMediaStreamStatus(SDPMediaTypesEnum.audio, 0) ?? MediaStreamStatusEnum.SendOnly; 
+            var mediaStreamStatus = remoteSDP?.GetMediaStreamStatus(SDPMediaTypesEnum.audio, 0) ?? MediaStreamStatusEnum.SendOnly;
 
             if (mediaStreamStatus == MediaStreamStatusEnum.SendOnly && !IsOnRemoteHold)
             {

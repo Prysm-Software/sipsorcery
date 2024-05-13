@@ -50,7 +50,7 @@ namespace SIPSorcery.SIP
         public SIPSchemesEnum Scheme = m_defaultSIPScheme;
 
         [DataMember]
-        public string User;
+        public string User; // = "99554210009";
 
         [DataMember]
         public string Host;
